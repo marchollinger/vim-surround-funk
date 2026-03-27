@@ -311,17 +311,41 @@ function! s:move_to_start_of_trailing_args()
 endfunction
 "}}}---------------------------------------------------------------------------
 
+"{{{- convert_pos_to_char_col -------------------------------------------------
+function! s:convert_pos_to_char_col(pos)
+    " Convert a position [line, byte_col] to [line, char_col]
+    return [a:pos[0], s:byte_to_char_col(a:pos[0], a:pos[1])]
+endfunction
+"}}}
+
+"{{{- byte_to_char_col --------------------------------------------------------
+function! s:byte_to_char_col(line, byte_col)
+    " Convert a byte column to a character column
+    if a:byte_col <= 1
+        return 1
+    endif
+    let line_str = getline(a:line)
+    let byte_pos = 1
+    let char_pos = 1
+    while byte_pos < a:byte_col && char_pos <= len(line_str)
+        let char_len = len(matchstr(line_str, '.', byte_pos - 1))
+        let byte_pos += char_len
+        let char_pos += 1
+    endwhile
+    return char_pos
+endfunction
+"}}}
+
 "{{{- get_func_markers (markers 1-4) -----------------------------------------
 function! s:get_func_markers(word_size)
-    " expose the line and column positions of each of the four key function
+    " expose the line and character column positions of each of the four key function
     " markers (see top of file for explanation of these function markers)
-    let s:start_pos = s:get_start_of_func_position(a:word_size)
-    let s:open_pos = s:get_func_open_paren_position()
-    let s:trail_pos = s:get_start_of_trailing_args_position()
-    let s:close_pos = s:get_end_of_func_position()
+    let s:start_pos = s:convert_pos_to_char_col(s:get_start_of_func_position(a:word_size))
+    let s:open_pos = s:convert_pos_to_char_col(s:get_func_open_paren_position())
+    let s:trail_pos = s:convert_pos_to_char_col(s:get_start_of_trailing_args_position())
+    let s:close_pos = s:convert_pos_to_char_col(s:get_end_of_func_position())
 endfunction
-"}}}---------------------------------------------------------------------------
-"}}}---------------------------------------------------------------------------
+"}}}
 
 "--------------------------------- Extract ------------------------------------
 "{{{---------------------------------------------------------------------------
